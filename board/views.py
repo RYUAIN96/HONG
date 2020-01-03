@@ -2,26 +2,41 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
-from base64 import b64encode 
+from base64 import b64encode
+import pandas as pd
 # byte배열을 base64로 변경함.
 
 cursor = connection.cursor() #sql문 수행위한 cursor객체
 
+def dataframe(request):
+    if request.method == 'GET':
+        df = pd.read_sql(
+            """
+            SELECT NO, WRITER, HIT, REGDATE
+            FROM BOARD_TABLE1
+            """, con=connection)
+        print(df)
+        print(df['NO'])
+        return render(request, 'board/dataframe.html', {"df":df.to_html(classes="table")})
+
+
+
 @csrf_exempt  
 def edit(request):
     if request.method == 'GET':
-        no = request.GET.get("no",0)
-
+        no = request.GET.get("no", 0) 
+       
         sql = """
-            SELECT NO, TITLE, CONTENT
-            FROM BOARD_TABLE1
+            SELECT NO, TITLE, CONTENT  
+            FROM  BOARD_TABLE1
             WHERE NO=%s
         """
         cursor.execute(sql, [no])
-        data = cursor.fetchone() 
-        return render(request, 'board/edit.html', {"one":data})
-    
-    elif request.method == "POST":
+        data = cursor.fetchone()
+        return render(request, 'board/edit.html',
+             {"one":data}) 
+
+    elif request.method == 'POST':         
         no = request.POST['no']
         ti = request.POST['title']
         co = request.POST['content']
@@ -33,6 +48,7 @@ def edit(request):
         """
         cursor.execute(sql, arr)
         return redirect("/board/content?no="+no)
+
 
 
 @csrf_exempt  
@@ -137,14 +153,8 @@ def write(request):
     if request.method == 'GET':
         return render(request, 'board/write.html') 
     elif request.method == 'POST':
-
-        print("BBB")
         tmp = None
-
         if 'img' in request.FILES:
-            print("AAA")
-            print(request.FILES)
-
             img = request.FILES['img']        
             tmp = img.read()
 
@@ -154,6 +164,7 @@ def write(request):
             request.POST['writer'],
             tmp
         ]
+
         try :
             # print(arr)
             sql = """
