@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>일괄수정</title>
+</head>
+<body>
+    {% csrf_token %}
+    <h3>일괄수정</h3>
+    <form action="/board/t2_update_all" method="post">
+        <input type="hidden" name="menu" value="2" />
+        <table border="0">
+            {% for one in list %}
+            <tr>
+                <td>
+                    <input type="hidden" name="no[]" value="{{ one.no }}" readonly />
+                    <input type="text" name="name[]" value="{{ one.name}}" />이름</td>
+                <td><input type="text" name="kor[]" value="{{ one.kor }}" />국어</td>
+                <td><input type="text" name="eng[]" value="{{ one.eng }}" />영어</td>
+                <td><input type="text" name="math[]" value="{{ one.math }}" />수학</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <input type="submit" value="일괄수정" />
+        <a href="/board/t2_list">목록</a>
+    </form>
+</body>
+</html>

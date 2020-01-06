@@ -8,6 +8,131 @@ import pandas as pd
 
 cursor = connection.cursor() #sql문 수행위한 cursor객체
 
+#########################################
+from . models import Table2 # models.py 파일의 Table2클래스 불러옴
+
+@csrf_exempt 
+def t2_update_all(request):
+    if request.method == 'GET':
+        n = request.session['no'] # n = [8,3,5]
+        print(n) 
+        # SELECT * FROM BOARD_TABLE2 WHERE NO=8 OR NO=5 OR NO=3
+        # SELECT * FROM BOARD_TABLE2 WHERE NO IN (8,5,3)
+        rows = Table2.objects.filter(no__in=n)
+        return render(request,'board/t2_update_all.html', {"list":rows})
+    elif request.method == 'POST':
+        menu = request.POST['menu']
+        if menu == "1":
+            no = request.POST.getlist("chk[]") # getlist -> 리스트로 가져온다
+            request.session["no"] = no
+            return redirect("/board/t2_update_all")
+        elif menu == "2":
+            no = request.POST.getlist("no[]")
+            name = request.POST.getlist("name[]")
+            kor = request.POST.getlist("kor[]")
+            eng = request.POST.getlist("eng[]")
+            math = request.POST.getlist("math[]")
+
+            objs = []
+            for i in range(0, len(no), 1):
+                obj = Table2.objects.get(no=no[i])
+                obj.name = name[i]
+                obj.kor = kor[i]
+                obj.eng = eng[i]
+                obj.math = math[i]
+                objs.append(obj)
+            # 일괄 수정
+            Table2.objects.bulk_update(objs, ["name", "kor", "eng", "math"])
+            return redirect("/board/t2_list")
+
+
+@csrf_exempt 
+def t2_insert_all(request):
+    if request.method == 'GET':
+        return render(request,'board/t2_insert_all.html', {"cnt":range(5)})
+    elif request.method == 'POST':
+        na = request.POST.getlist('name[]')
+        ko = request.POST.getlist('kor[]')
+        en = request.POST.getlist('eng[]')
+        ma = request.POST.getlist('math[]')
+
+        objs = []
+
+        for i in range(0, len(na),1):
+            obj = Table2()
+            obj.name = na[i]
+            obj.kor = ko[i]
+            obj.eng = en[i]
+            obj.math = ma[i]
+            objs.append(obj)
+
+        # 일괄 추가
+        Table2.objects.bulk_create(objs)
+        return redirect("/board/t2_list")
+    
+
+
+@csrf_exempt 
+def t2_update(request):
+    if request.method == 'GET':
+        n = request.GET.get("no",0)
+        # SELECT * FROM BOARD_TABLE2 WHERE NO=%s
+        row = Table2.objects.get(no=n)
+        return render(request,'board/t2_update.html',{"one":row})
+    elif request.method == 'POST':
+        n = request.POST['no']
+
+        obj = Table2.objects.get(no=n) # obj객체 가져옴
+        obj.name = request.POST['name'] # 변수에 값
+        obj.kor  = request.POST['kor']
+        obj.eng  = request.POST['eng']
+        obj.math = request.POST['math']
+        obj.save() # 저장하기 수행
+        # UPDATE BOARD_TABLE2 SET
+        # NAME=%s, KOR-%s,ENG=%s,MATH=%s
+        # WHERE NO = %s
+
+        return redirect("/board/t2_list")
+
+
+@csrf_exempt 
+def t2_delete(request):
+    if request.method == 'GET':
+        n = request.GET.get("no",0)
+
+        # SQL : SELECT * FROM BOARD_TABLE2 WHERE NO=%s
+        row = Table2.objects.get(no=n)
+        # DELETE FROM BOARD_TABLE2 WHERE NO=%s
+        row.delete() # 삭제
+
+        return redirect("/board/t2_list")
+
+
+@csrf_exempt 
+def t2_list(request):
+    if request.method == 'GET':
+            rows = Table2.objects.all()
+            # SQL : SELECT * FROM BOARD_TABLE2
+            print(rows) #결과 확인
+            print(type(rows)) # 타입확인
+            return render(request,'board/t2_list.html',{"list":rows}) # html표시
+
+@csrf_exempt 
+def t2_insert(request):
+    if request.method == 'GET':
+        return render(request,'board/t2_insert.html')
+    elif request.method == 'POST':
+        obj = Table2() # obj객체 생성
+        obj.name = request.POST['name'] # 변수에 값
+        obj.kor  = request.POST['kor']
+        obj.eng  = request.POST['eng']
+        obj.math = request.POST['math']
+        obj.save() # 저장하기 수행
+
+        return redirect("/board/t2_insert")
+
+
+
 def dataframe(request):
     if request.method == 'GET':
         df = pd.read_sql(
