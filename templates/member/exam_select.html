@@ -7,31 +7,31 @@
     <title>Document</title>
 </head>
 <body>
-    <form action="/board/t2_update_all" method="post">
+    <form action="/member/exam_update_all" method="post">
     {% csrf_token %}
     <input type="hidden" name="menu" value="1" />
     <table border="1">
         {% for one in list %}
         <tr>
-            <td><input type="checkbox" value="{{list.no}}" name="chk[]" />
+            <td><input type="checkbox" value="{{one.no}}" name="chk[]" />
                 {{one.no}}
-            <td>{{one.no}}</td>
             <td>{{one.name}}</td>
             <td>{{one.kor}}</td>
             <td>{{one.eng}}</td>
             <td>{{one.math}}</td>
+            <td>{{one.classroom}}</td>
             <td>{{one.regdate}}</td>
             <td>
                 <a href="/member/exam_delete?no={{ one.no }}">삭제</a>
                 <a href="/member/exam_update?no={{ one.no }}">수정</a>
             </td>
-
+    
         </tr>
         {% endfor %}
-    </table>
+    </table>    
     <input type="submit" value="일괄수정" />
-    <a href ="/board/t2_insert">추가</a>
-    <a href ="/board/t2_insert_all">일괄추가</a>
+    <a href="/member/exam_select">일괄삭제</a>
+    <a href="/member/exam_result">결과</a>
     </form>
 </body>
 </html>
