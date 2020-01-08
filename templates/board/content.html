@@ -9,6 +9,7 @@
 </head>
 
 <body>
+    {{% autoescape off %}
     <div class="container">
         <div style="margin-top:50px; margin-bottom: 50px;">
             <h3>글 내용</h3>
@@ -62,6 +63,6 @@
         <a href="/board/delete?no={{one.0}}" class="btn btn-warning">글삭제</a>
 
     </div>
-
+    {% endautoescape %}
 </body>
 </html>

@@ -9,7 +9,7 @@ import pandas as pd
 cursor = connection.cursor() #sql문 수행위한 cursor객체
 
 #########################################
-from . models import Table2 # models.py 파일의 Table2클래스 불러옴
+from .models import Table2 # models.py 파일의 Table2클래스 불러옴
 
 @csrf_exempt 
 def t2_update_all(request):
@@ -257,20 +257,39 @@ def content(request):
 @csrf_exempt  
 def list(request):
     if request.method == 'GET':
+        txt  = request.GET.get("txt","")
+        page = int(request.GET.get("page", 1))
+        arr = [ '%'+txt+'%', page*10-10+1, page*10 ]
+        print(arr)
         request.session['hit'] = 1  #세션에 hit=1
         sql = """
-            SELECT 
+            SELECT * FROM (
+                SELECT
                 NO, TITLE, WRITER, 
-                HIT, TO_CHAR(REGDATE, 'YYYY-MM-DD HH:MI:SS') 
-            FROM 
-                BOARD_TABLE1
-            ORDER BY NO DESC
+                    HIT, TO_CHAR(REGDATE, 'YYYY-MM-DD HH:MI:SS'),
+                    ROW_NUMBER() OVER (ORDER BY NO DESC) ROWN
+                FROM
+                    BOARD_TABLE1
+                WHERE TITLE LIKE %s
+            )
+            WHERE ROWN BETWEEN %s AND %s
         """
-        cursor.execute(sql)
+        cursor.execute(sql, arr)
         data = cursor.fetchall()
+        sql ="""
+            SELECT COUNT(*) FROM BOARD_TABLE1 WHERE TITLE LIKE %s
+            """
+        arr1 = [ '%'+txt+'%' ]
+        cursor.execute(sql, arr1)
+        cnt = cursor.fetchone()[0]
+        tot = (cnt-1)//10+1
+
+        
         print( type(data) ) 
-        print( data )        #[(    ),(    ) ]
-        return render(request, 'board/list.html', {"list":data}) 
+        print( data )     
+        return render(request, 'board/list.html', {"list":data , "pages":range(1,tot+1,1)})
+        
+
 
 
 @csrf_exempt  

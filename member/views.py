@@ -13,6 +13,18 @@ from django.contrib.auth import authenticate as auth1
 from .models import Table2
 from django.db.models import Sum, Max, Min, Count, Avg
 
+
+def js_index(request):
+    return render(request, 'member/js_index.html' )
+
+def js_chart(request):
+    str = "100, 200, 300, 400, 200, 100"
+    return render(request, 'member/js_chart.html' )
+    
+
+
+
+###################################################################################
 def exam_result(request):
         # SELECT SUM(math) FROM MEMBER_TABLE2 WHERE CLASS_ROOM=101
     list = Table2.objects.aggregate(Sum('math'))
@@ -51,13 +63,42 @@ def exam_insert(request):
         obj.save()
         return redirect("/member/exam_select")
 
+# 내 답변
+# def exam_select(request):
+#     if request.method == 'GET':
+#             rows = Table2.objects.all().order_by('name')
+#             # SQL : SELECT * FROM BOARD_TABLE2
+#             print(rows) #결과 확인
+#             print(type(rows)) # 타입확인
+#             return render(request,'member/exam_select.html',{"list":rows,}) # html표시
+
 def exam_select(request):
-    if request.method == 'GET':
-            rows = Table2.objects.all().order_by('name')
-            # SQL : SELECT * FROM BOARD_TABLE2
-            print(rows) #결과 확인
-            print(type(rows)) # 타입확인
-            return render(request,'member/exam_select.html',{"list":rows}) # html표시
+    txt = request.GET.get("txt","")
+    page = int(request.GET.get("page",1)) # 페이지가 안들어오면 1페이지가 표시되도록 함
+    # 1 => 0, 10
+    # 2 => 10, 20
+    # 3 => 20, 30
+    
+    if txt == "": # 검색어가 없느 ㄴ경우 전체 출력
+        # SELECT * FROM MEMBER_TABLE2
+        list = Table2.objects.all()[page*10-10:page*10]
+
+        # SELECT COUNT(*) FROM MEMBER_TABLE2
+        cnt = Table2.objects.all().count()
+        tot = (cnt-1)//10+1
+    # 10 => 1
+    # 13 => 2
+    # 20 => 2
+    # 32 => 4
+    else: # 검색어가 있느 ㄴ경우
+        # SELECT * FROM MT2 WHERE name LIKE '%가%'
+        list = Table2.objects.filter(name__contains=txt)[page*10-10:page*10]
+
+        # SELECT COUNT * FROM MT2 WHERE name LIKE '%가%'
+        cnt = Table2.objects.filter(name__contains=txt).count()
+        tot = (cnt-1)//10+1
+    return render(request, 'member/exam_select.html',
+        {"list":list, "pages":range(1,tot+1,1)})
 
     # 강사님 답변
     # def exam_select(request):
@@ -140,7 +181,7 @@ def exam_delete(request):
         # DELETE FROM BOARD_TABLE2 WHERE NO=%s
         row.delete() # 삭제
 
-        return redirect("/member/exam_select")
+        return redirect("/me mber/exam_select")
 
 
 #################################################################################
